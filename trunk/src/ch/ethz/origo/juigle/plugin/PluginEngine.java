@@ -28,7 +28,7 @@ import ch.ethz.origo.juigle.plugin.exception.PluginEngineException;
  * instance for this class.
  * 
  * @author Vaclav Souhrada (v.souhrada at gmail.com)
- * @version 0.1.1 (3/28/2010)
+ * @version 0.1.3 (3/29/2010)
  * @since (3/07/2010)
  * 
  */
@@ -43,8 +43,6 @@ public class PluginEngine {
 	 */
 	public static final String DIR = "plugins"; //$NON-NLS-1$
 	private static PluginEngine instance;
-	
-	private String pluginPath;
 
 	private int majorVersion = 0;
 	private int minorVersion = 1;
@@ -55,7 +53,6 @@ public class PluginEngine {
 	private Map<Pluggable, Boolean> hiddens = new HashMap<Pluggable, Boolean>();
 	private Map<Pluggable, Boolean> updateEnable = new HashMap<Pluggable, Boolean>();
 	private Map<Pluggable, Boolean> enabled = new HashMap<Pluggable, Boolean>();
-	private Map<Pluggable, String> categoryMap = new HashMap<Pluggable, String>();
 	private Map<String, List<Pluggable>> listOfAllPlugins = new HashMap<String, List<Pluggable>>();
 
 	private PluginEngine() {
@@ -147,34 +144,33 @@ public class PluginEngine {
 	 */
 	protected void savePluggable() throws PluginEngineException {
 		System.out.println("Neukladam,,,,zmeneno");
-		/*try {
-			Document document = DocumentBuilderFactory.newInstance()
-					.newDocumentBuilder().newDocument();
-			document.setXmlStandalone(true);
-
-			Element root = document.createElement("plugins"); //$NON-NLS-1$
-			document.appendChild(root);
-			for (Pluggable plugin : this.plugins) {
-				Element plugElt = document.createElement("plugin"); //$NON-NLS-1$
-				plugElt.setAttribute("hidden", hiddens.get(plugin).toString()); //$NON-NLS-1$
-				plugElt.setAttribute("update", updateEnable.get(plugin).toString()); //$NON-NLS-1$
-				plugElt.setAttribute("enabled", enabled.get(plugin).toString()); //$NON-NLS-1$
-			
-				root.appendChild(plugElt);
-				Element sourceElt = document.createElement("source"); //$NON-NLS-1$
-				sourceElt.setTextContent(localSources.get(plugin));
-				plugElt.appendChild(sourceElt);
-				Element classElt = document.createElement("class"); //$NON-NLS-1$
-				classElt.setTextContent(plugin.getClass().getName().trim());
-				plugElt.appendChild(classElt);
-			}
-
-			TransformerFactory.newInstance().newTransformer().transform(
-					new DOMSource(document), new StreamResult(new File(file)));
-
-		} catch (Exception e) {
-			throw new PluginEngineException("Unable to save plugins list", e); //$NON-NLS-1$
-		}*/
+		/*
+		 * try { Document document = DocumentBuilderFactory.newInstance()
+		 * .newDocumentBuilder().newDocument(); document.setXmlStandalone(true);
+		 * 
+		 * Element root = document.createElement("plugins"); //$NON-NLS-1$
+		 * document.appendChild(root); for (Pluggable plugin : this.plugins) {
+		 * Element plugElt = document.createElement("plugin"); //$NON-NLS-1$
+		 * plugElt.setAttribute("hidden", hiddens.get(plugin).toString());
+		 * //$NON-NLS-1$ plugElt.setAttribute("update",
+		 * updateEnable.get(plugin).toString()); //$NON-NLS-1$
+		 * plugElt.setAttribute("enabled", enabled.get(plugin).toString());
+		 * //$NON-NLS-1$
+		 * 
+		 * root.appendChild(plugElt); Element sourceElt =
+		 * document.createElement("source"); //$NON-NLS-1$
+		 * sourceElt.setTextContent(localSources.get(plugin));
+		 * plugElt.appendChild(sourceElt); Element classElt =
+		 * document.createElement("class"); //$NON-NLS-1$
+		 * classElt.setTextContent(plugin.getClass().getName().trim());
+		 * plugElt.appendChild(classElt); }
+		 * 
+		 * TransformerFactory.newInstance().newTransformer().transform( new
+		 * DOMSource(document), new StreamResult(new File(file)));
+		 * 
+		 * } catch (Exception e) { throw new
+		 * PluginEngineException("Unable to save plugins list", e); //$NON-NLS-1$ }
+		 */
 	}
 
 	/**
@@ -270,8 +266,26 @@ public class PluginEngine {
 		return result;
 	}
 
+	/**
+	 * Return all plugins from category which are enable, not hidden and are 
+	 * compatible with current application version
+	 * 
+	 * @param category name of plugins category
+	 * @return all correct plugins from entered category
+	 * @version 0.1.1 (3/29/2010)
+	 * @since 0.1.2 (3/28/2010)
+	 */
 	public List<Pluggable> getAllCorrectPluggables(String category) {
-		return listOfAllPlugins.get(category);
+		List<Pluggable> pluginsList = listOfAllPlugins.get(category);
+		List<Pluggable> correctList = new ArrayList<Pluggable>();
+		if (pluginsList.size() > 0) {
+			for (Pluggable item : pluginsList) {
+				if (isEnabled(item) && !isHidden(item) && isCompatible(item)) {
+					correctList.add(item);
+				}
+			}
+		}
+		return correctList;
 	}
 
 	/**
@@ -507,7 +521,7 @@ public class PluginEngine {
 				updateEnabled = !"false".equalsIgnoreCase(attributes.getValue("update")); //$NON-NLS-1$ //$NON-NLS-2$
 				enable = !"false".equalsIgnoreCase(attributes.getValue("enabled")); //$NON-NLS-1$ //$NON-NLS-2$
 			}
-			
+
 			if (qName.equalsIgnoreCase("category")) { //$NON-NLS-1$
 				category = attributes.getValue("name"); //$NON-NLS-1$
 				System.out.println("nacetla kategorue " + category);
@@ -531,8 +545,8 @@ public class PluginEngine {
 							addFileToClasspath(file);
 						}
 
-					} 
-					
+					}
+
 				} else if (inClass && pluggable == null) {
 					String className = new String(ch, start, length);
 					System.out.println("class name " + className);
@@ -550,12 +564,12 @@ public class PluginEngine {
 					}
 					addPluggableToCathegoryList(pluggable, category);
 					folder = null;
-				} 
+				}
 			} catch (Exception e) {
 				throw new SAXException(e);
 			}
 		}
-		
+
 		private void addPluggableToCathegoryList(Pluggable plugin, String category) {
 			System.out.println("davame plugin do kategorue " + category);
 			List<Pluggable> pluggables = listOfAllPlugins.get(category);
