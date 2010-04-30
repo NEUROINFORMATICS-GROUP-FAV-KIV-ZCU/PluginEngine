@@ -6,11 +6,11 @@ import java.net.URI;
 /**
  * 
  * @author Vaclav Souhrada (v.souhrada at gmail.com)
- * @version 0.1.0 (3/07/2010)
+ * @version 0.1.1 (4/30/2010)
  * @since (3/07/2010)
  *
  */
-public interface Pluggable {
+public interface IPluggable {
 
 	/**
 	 * @return the name for this plugin, should not be null
