@@ -7,10 +7,10 @@ import java.io.File;
  * @author Vaclav Souhrada (v.souhrada at gmail.com)
  * @version 0.1.0 (3/07/2010)
  * @since (3/07/2010)
- * @see Pluggable
+ * @see IPluggable
  *
  */
-public abstract class AbstractPlugin implements Pluggable {
+public abstract class AbstractPlugin implements IPluggable {
 	
 	/**
 	 * @return the directory in which the files of this plugin are storred

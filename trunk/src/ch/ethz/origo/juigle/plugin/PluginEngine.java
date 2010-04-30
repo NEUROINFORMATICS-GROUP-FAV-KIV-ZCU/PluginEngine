@@ -54,12 +54,12 @@ public class PluginEngine {
 	private int minorVersion = 1;
 	private int revisionVersion = 0;
 
-	private List<Pluggable> plugins = new ArrayList<Pluggable>();
-	private Map<Pluggable, String> localSources = new HashMap<Pluggable, String>();
-	private Map<Pluggable, Boolean> hiddens = new HashMap<Pluggable, Boolean>();
-	private Map<Pluggable, Boolean> updateEnable = new HashMap<Pluggable, Boolean>();
-	private Map<Pluggable, Boolean> enabled = new HashMap<Pluggable, Boolean>();
-	private Map<String, List<Pluggable>> listOfAllPlugins = new HashMap<String, List<Pluggable>>();
+	private List<IPluggable> plugins = new ArrayList<IPluggable>();
+	private Map<IPluggable, String> localSources = new HashMap<IPluggable, String>();
+	private Map<IPluggable, Boolean> hiddens = new HashMap<IPluggable, Boolean>();
+	private Map<IPluggable, Boolean> updateEnable = new HashMap<IPluggable, Boolean>();
+	private Map<IPluggable, Boolean> enabled = new HashMap<IPluggable, Boolean>();
+	private Map<String, List<IPluggable>> listOfAllPlugins = new HashMap<String, List<IPluggable>>();
 
 	private PluginEngine() {
 	}
@@ -121,7 +121,7 @@ public class PluginEngine {
 	 * Start all the loaded plugins without arguments (objects, data) for plugin.
 	 */
 	public void startPluggables() {
-		for (Pluggable plugin : plugins) {
+		for (IPluggable plugin : plugins) {
 			this.startPluggable(plugin);
 		}
 	}
@@ -131,7 +131,7 @@ public class PluginEngine {
 	 * plugins.
 	 */
 	public void startPluggables(Object... args) {
-		for (Pluggable plugin : plugins) {
+		for (IPluggable plugin : plugins) {
 			this.startPluggable(plugin, args);
 		}
 	}
@@ -139,7 +139,7 @@ public class PluginEngine {
 	/**
 	 * Start the given plugin.
 	 */
-	public void startPluggable(Pluggable plugin, Object... args) {
+	public void startPluggable(IPluggable plugin, Object... args) {
 		plugin.init(args);
 	}
 
@@ -157,16 +157,16 @@ public class PluginEngine {
 			document.setXmlStandalone(true);
 			Element root = document.createElement("plugins"); //$NON-NLS-1$
 			document.appendChild(root);
-			Set<Entry<String, List<Pluggable>>> pluginsToSave = listOfAllPlugins
+			Set<Entry<String, List<IPluggable>>> pluginsToSave = listOfAllPlugins
 					.entrySet();
 			// for - each all categories
-			for (Entry<String, List<Pluggable>> entry : pluginsToSave) {
+			for (Entry<String, List<IPluggable>> entry : pluginsToSave) {
 				Element categyElt = document.createElement("category");
 				categyElt.setAttribute("name", entry.getKey());
 				root.appendChild(categyElt);
-				List<Pluggable> pluggByCategory = entry.getValue();
+				List<IPluggable> pluggByCategory = entry.getValue();
 				// for each plugins from given category
-				for (Pluggable plugin : pluggByCategory) {
+				for (IPluggable plugin : pluggByCategory) {
 					Element plugElt = document.createElement("plugin"); //$NON-NLS-1$
 					plugElt.setAttribute("hidden", hiddens.get(plugin).toString());//$NON-NLS-1$ 
 					plugElt.setAttribute("update", updateEnable.get(plugin).toString()); //$NON-NLS-1$
@@ -197,7 +197,7 @@ public class PluginEngine {
 	 * @return the installed plugin
 	 * @throws PlugEngineException
 	 */
-	public Pluggable installOrUpdate(URI updateFile) throws PluginEngineException {
+	public IPluggable installOrUpdate(URI updateFile) throws PluginEngineException {
 		try {
 			PlugEngineHandler handler = new PlugEngineHandler(false);
 			SAXParserFactory.newInstance().newSAXParser().parse(
@@ -216,9 +216,9 @@ public class PluginEngine {
 	 * @param plugin
 	 * @throws PlugEngineException
 	 */
-	protected void addPluggable(Pluggable plugin) throws PluginEngineException {
+	protected void addPluggable(IPluggable plugin) throws PluginEngineException {
 		for (Iterator i = plugins.iterator(); i.hasNext();) {
-			Pluggable p = (Pluggable) i.next();
+			IPluggable p = (IPluggable) i.next();
 			if (plugin.getPluginName().equals(p.getPluginName()))
 				i.remove();
 		}
@@ -235,7 +235,7 @@ public class PluginEngine {
 	 * 
 	 * @throws PlugEngineException
 	 */
-	public void removePluggable(Pluggable plugin) throws PluginEngineException {
+	public void removePluggable(IPluggable plugin) throws PluginEngineException {
 		plugin.destroy();
 
 		this.plugins.remove(plugin);
@@ -251,17 +251,17 @@ public class PluginEngine {
 	/**
 	 * @return the list of all loaded plugins
 	 */
-	public List<Pluggable> getAllPluggables() {
+	public List<IPluggable> getAllPluggables() {
 		return plugins;
 	}
 
 	/**
 	 * @return the list of all non hidden loaded plugins
 	 */
-	public List<Pluggable> getAllVisiblePluggables() {
-		List<Pluggable> result = new ArrayList<Pluggable>();
+	public List<IPluggable> getAllVisiblePluggables() {
+		List<IPluggable> result = new ArrayList<IPluggable>();
 
-		for (Pluggable plugin : plugins) {
+		for (IPluggable plugin : plugins) {
 			if (!isHidden(plugin))
 				result.add(plugin);
 		}
@@ -269,12 +269,12 @@ public class PluginEngine {
 		return result;
 	}
 
-	public List<Pluggable> getAllCorrectPluggables() {
-		List<Pluggable> result = new ArrayList<Pluggable>();
+	public List<IPluggable> getAllCorrectPluggables() {
+		List<IPluggable> result = new ArrayList<IPluggable>();
 
-		Set<Entry<Pluggable, Boolean>> map = enabled.entrySet();
+		Set<Entry<IPluggable, Boolean>> map = enabled.entrySet();
 
-		for (Entry<Pluggable, Boolean> entry : map) {
+		for (Entry<IPluggable, Boolean> entry : map) {
 			if (entry.getValue()) {
 				result.add(entry.getKey());
 			}
@@ -292,11 +292,11 @@ public class PluginEngine {
 	 * @version 0.1.1 (3/29/2010)
 	 * @since 0.1.2 (3/28/2010)
 	 */
-	public List<Pluggable> getAllCorrectPluggables(String category) {
-		List<Pluggable> pluginsList = listOfAllPlugins.get(category);
-		List<Pluggable> correctList = new ArrayList<Pluggable>();
+	public List<IPluggable> getAllCorrectPluggables(String category) {
+		List<IPluggable> pluginsList = listOfAllPlugins.get(category);
+		List<IPluggable> correctList = new ArrayList<IPluggable>();
 		if (pluginsList.size() > 0) {
-			for (Pluggable item : pluginsList) {
+			for (IPluggable item : pluginsList) {
 				if (isEnabled(item) && !isHidden(item) && isCompatible(item)) {
 					correctList.add(item);
 				}
@@ -308,10 +308,10 @@ public class PluginEngine {
 	/**
 	 * @return the list of all loaded plugins with update enabled
 	 */
-	public List<Pluggable> getAllUpdatablePluggables() {
-		List<Pluggable> result = new ArrayList<Pluggable>();
+	public List<IPluggable> getAllUpdatablePluggables() {
+		List<IPluggable> result = new ArrayList<IPluggable>();
 
-		for (Pluggable plugin : plugins) {
+		for (IPluggable plugin : plugins) {
 			if (isUpdateEnabled(plugin))
 				result.add(plugin);
 		}
@@ -322,10 +322,10 @@ public class PluginEngine {
 	/**
 	 * @return the list of all loaded and enabled plugins
 	 */
-	public List<Pluggable> getAllEnabledPluggables() {
-		List<Pluggable> result = new ArrayList<Pluggable>();
+	public List<IPluggable> getAllEnabledPluggables() {
+		List<IPluggable> result = new ArrayList<IPluggable>();
 
-		for (Pluggable plugin : plugins) {
+		for (IPluggable plugin : plugins) {
 			if (isEnabled(plugin))
 				result.add(plugin);
 		}
@@ -336,14 +336,14 @@ public class PluginEngine {
 	/**
 	 * @return true if the given plugin should not be show to the user
 	 */
-	public boolean isHidden(Pluggable plugin) {
+	public boolean isHidden(IPluggable plugin) {
 		return hiddens.get(plugin);
 	}
 
 	/**
 	 * @return false if the given plugin should not be updated
 	 */
-	public boolean isUpdateEnabled(Pluggable plugin) {
+	public boolean isUpdateEnabled(IPluggable plugin) {
 		return updateEnable.get(plugin);
 	}
 
@@ -352,7 +352,7 @@ public class PluginEngine {
 	 * 
 	 * @throws PlugEngineException
 	 */
-	public void setUpdateEnabled(Pluggable plugin, boolean enabled)
+	public void setUpdateEnabled(IPluggable plugin, boolean enabled)
 			throws PluginEngineException {
 		if (plugin != null) {
 			this.updateEnable.put(plugin, enabled);
@@ -363,7 +363,7 @@ public class PluginEngine {
 	/**
 	 * @return false if the given plugin has been disabled
 	 */
-	public boolean isEnabled(Pluggable plugin) {
+	public boolean isEnabled(IPluggable plugin) {
 		return enabled.get(plugin);
 	}
 
@@ -372,7 +372,7 @@ public class PluginEngine {
 	 * 
 	 * @throws PlugEngineException
 	 */
-	public void setEnabled(Pluggable plugin, boolean enabled)
+	public void setEnabled(IPluggable plugin, boolean enabled)
 			throws PluginEngineException {
 		if (plugin != null) {
 			if (!enabled || isCompatible(plugin)) {
@@ -385,7 +385,7 @@ public class PluginEngine {
 	/**
 	 * @return the directory in which the files of the given plugin are storred
 	 */
-	public File getDirectory(Pluggable plugin) {
+	public File getDirectory(IPluggable plugin) {
 		String folder = this.localSources.get(plugin);
 		return new File(folder);
 	}
@@ -393,9 +393,9 @@ public class PluginEngine {
 	/**
 	 * @return the list of all programs which have a new version to install
 	 */
-	public List<Pluggable> checkForUpdates() {
-		List<Pluggable> result = new ArrayList<Pluggable>();
-		for (Pluggable update : this.getAllUpdatablePluggables()) {
+	public List<IPluggable> checkForUpdates() {
+		List<IPluggable> result = new ArrayList<IPluggable>();
+		for (IPluggable update : this.getAllUpdatablePluggables()) {
 			try {
 				PlugEngineHandler handler = new PlugEngineHandler(update);
 				SAXParserFactory.newInstance().newSAXParser().parse(
@@ -412,10 +412,10 @@ public class PluginEngine {
 	/**
 	 * @return true if the given plugin does not work for this version of the main
 	 *         application
-	 * @see Pluggable#getMinimalAppVersion()
+	 * @see IPluggable#getMinimalAppVersion()
 	 * @see PlugEngine#getCurrentVersion()
 	 */
-	public boolean isCompatible(Pluggable plugin) {
+	public boolean isCompatible(IPluggable plugin) {
 		int[] minimal = plugin.getMinimalAppVersion();
 		int[] plugVersion = this.getCurrentVersion();
 
@@ -453,7 +453,7 @@ public class PluginEngine {
 		this.revisionVersion = revision;
 
 		if (plugins.size() > 0) {
-			for (Pluggable plugin : plugins) {
+			for (IPluggable plugin : plugins) {
 				if (isEnabled(plugin) && !isCompatible(plugin)) {
 					this.enabled.put(plugin, false);
 				}
@@ -504,7 +504,7 @@ public class PluginEngine {
 		private boolean local, update = false, hidden = false,
 				updateEnabled = true, enable = true;
 		private String folder, source, newVersion, category = null;
-		private Pluggable pluggable;
+		private IPluggable pluggable;
 
 		/**
 		 * @param local
@@ -519,7 +519,7 @@ public class PluginEngine {
 		 * @param pluggable
 		 *          the plugin which configuration file will be parsed
 		 */
-		public PlugEngineHandler(Pluggable pluggable) {
+		public PlugEngineHandler(IPluggable pluggable) {
 			this.local = false;
 			this.pluggable = pluggable;
 		}
@@ -568,7 +568,7 @@ public class PluginEngine {
 					String className = new String(ch, start, length);
 					//System.out.println("class name " + className);
 					Class<?> loadedClass = Class.forName(className);
-					pluggable = (Pluggable) loadedClass.newInstance();
+					pluggable = (IPluggable) loadedClass.newInstance();
 					if (local) {
 						plugins.add(pluggable);
 						hiddens.put(pluggable, hidden);
@@ -587,12 +587,12 @@ public class PluginEngine {
 			}
 		}
 
-		private void addPluggableToCathegoryList(Pluggable plugin, String category) {
+		private void addPluggableToCathegoryList(IPluggable plugin, String category) {
 			//System.out.println("davame plugin do kategorie " + category);
-			List<Pluggable> pluggables = listOfAllPlugins.get(category);
+			List<IPluggable> pluggables = listOfAllPlugins.get(category);
 			if (pluggables != null) {
 			} else {
-				pluggables = new ArrayList<Pluggable>();
+				pluggables = new ArrayList<IPluggable>();
 			}
 			pluggables.add(plugin);
 			listOfAllPlugins.put(category, pluggables);
@@ -627,7 +627,7 @@ public class PluginEngine {
 		/**
 		 * the current plugin
 		 */
-		public Pluggable getPluggable() {
+		public IPluggable getPluggable() {
 			return pluggable;
 		}
 
