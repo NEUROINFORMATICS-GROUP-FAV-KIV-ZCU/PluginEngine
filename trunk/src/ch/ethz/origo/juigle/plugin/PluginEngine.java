@@ -1,3 +1,26 @@
+/*
+ *    This program is free software; you can redistribute it and/or modify
+ *    it under the terms of the GNU General Public License as published by
+ *    the Free Software Foundation; either version 2 of the License, or
+ *    (at your option) any later version.
+ *
+ *    This program is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *    GNU General Public License for more details.
+ *
+ *    You should have received a copy of the GNU General Public License
+ *    along with this program; if not, write to the Free Software
+ *    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+
+/*
+ *  
+ *    Copyright (C) 2009 - 2010 
+ *    							University of West Bohemia, 
+ *                  Department of Computer Science and Engineering, 
+ *                  Pilsen, Czech Republic
+ */
 package ch.ethz.origo.juigle.plugin;
 
 import java.io.File;
@@ -34,7 +57,7 @@ import ch.ethz.origo.juigle.plugin.exception.PluginEngineException;
  * instance for this class.
  * 
  * @author Vaclav Souhrada (v.souhrada at gmail.com)
- * @version 0.1.4 (4/04/2010)
+ * @version 0.1.5 (5/20/2010)
  * @since 0.1.0 (3/07/2010)
  * 
  */
@@ -197,7 +220,8 @@ public class PluginEngine {
 	 * @return the installed plugin
 	 * @throws PlugEngineException
 	 */
-	public IPluggable installOrUpdate(URI updateFile) throws PluginEngineException {
+	public IPluggable installOrUpdate(URI updateFile)
+			throws PluginEngineException {
 		try {
 			PlugEngineHandler handler = new PlugEngineHandler(false);
 			SAXParserFactory.newInstance().newSAXParser().parse(
@@ -417,10 +441,12 @@ public class PluginEngine {
 	 */
 	public boolean isCompatible(IPluggable plugin) {
 		int[] minimal = plugin.getMinimalAppVersion();
-		int[] plugVersion = this.getCurrentVersion();
-
-		if ((minimal[0] <= plugVersion[0]) && (minimal[1] <= plugVersion[1])
-				&& (minimal[2] <= plugVersion[2])) {
+		String appVersion = String.valueOf(majorVersion)
+				+ String.valueOf(minorVersion) + String.valueOf(revisionVersion);
+		String minimalVersion = String.valueOf(minimal[0])
+				+ String.valueOf(minimal[1]) + String.valueOf(minimal[2]);
+		
+		if (Integer.valueOf(appVersion) >= Integer.valueOf(minimalVersion)) {
 			return true;
 		}
 		return false;
@@ -541,7 +567,6 @@ public class PluginEngine {
 
 			if (qName.equalsIgnoreCase("category")) { //$NON-NLS-1$
 				category = attributes.getValue("name"); //$NON-NLS-1$
-				System.out.println("nacetla kategorue " + category);
 			}
 		}
 
@@ -566,7 +591,6 @@ public class PluginEngine {
 
 				} else if (inClass && pluggable == null) {
 					String className = new String(ch, start, length);
-					//System.out.println("class name " + className);
 					Class<?> loadedClass = Class.forName(className);
 					pluggable = (IPluggable) loadedClass.newInstance();
 					if (local) {
@@ -588,7 +612,6 @@ public class PluginEngine {
 		}
 
 		private void addPluggableToCathegoryList(IPluggable plugin, String category) {
-			//System.out.println("davame plugin do kategorie " + category);
 			List<IPluggable> pluggables = listOfAllPlugins.get(category);
 			if (pluggables != null) {
 			} else {
