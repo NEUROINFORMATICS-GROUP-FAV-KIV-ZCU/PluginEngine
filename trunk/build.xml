@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="PluginEngine" default="makejar" basedir=".">
 		
-	<!-- domovský adresář bundelu -->
+	<!-- domovský adresář -->
 	<property name="projecthome" value="." />
 	
-	<!-- verze bundle -->
+	<!-- verze -->
 	<property name="version" value="1.0" />
 
-	<!-- symbolický název bundelu -->
+	<!-- symbolický název -->
 	<property name="jarname" value="${ant.project.name}" />
 	
 	<property name="juiglehome" value="../Juigle"/>
@@ -53,7 +53,7 @@
 		<!--<antcall target="autoclean" />-->
 	</target>
 	
-	<!-- automatický úklid po kompilaci a vytvoření bundelu-->
+	<!-- automatický úklid po kompilaci a vytvoření-->
 	<target name="autoclean">
 		<delete dir="${build}" />
 	</target>
@@ -66,8 +66,8 @@
 	</target>
 
 	
-	<!-- volitelný target, který umožní vytvořený bundle nakopírovat
-		na libovolné místo na disku, např. do složky Felixu. Před použitím
+	<!-- volitelný target, který umožní vytvořený jar nakopírovat
+		na libovolné místo na disku. Před použitím
 		je nutné změnit cestu deployloc  -->
 	<target name="deploy" depends="makejar">
 		<delete file="${deployloc}/${buildfilename}" />
@@ -76,9 +76,7 @@
 	</target>	
 	
 	<target name="run">
-		<echo message="Starting..." />	
-			<java jar="${runloc}/bin/felix.jar" fork="true" dir="${runloc}">
-			</java>
-			<echo message="Shutting down Felix framework" />	
+		<echo message="PluginEngine can not be runned alone" />	
+		<echo message="Shutting down PluginEngine" />	
 		</target>
 </project>
