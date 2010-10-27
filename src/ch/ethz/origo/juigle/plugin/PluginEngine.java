@@ -26,6 +26,7 @@ package ch.ethz.origo.juigle.plugin;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URL;
@@ -35,8 +36,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.SAXParserFactory;
@@ -50,27 +51,27 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+import ch.ethz.origo.juigle.plugin.errors.PluginEngineErrorCodes;
 import ch.ethz.origo.juigle.plugin.exception.PluginEngineException;
 
 /**
- * Manage the plugins and the updates. Use getInstance() to get the shared
+ * Manage the plug-ins and the updates. Use getInstance() to get the shared
  * instance for this class.
  * 
- * @author Vaclav Souhrada (v.souhrada at gmail.com)
- * @version 0.1.5 (5/20/2010)
+ * @author vsouhrada (v.souhrada at gmail.com)
+ * @version 0.2.0.00 (10/26/2010)
  * @since 0.1.0 (3/07/2010)
  * 
  */
 public class PluginEngine {
 
-	/**
-	 * XML file where the list of installed plugins is stored
-	 */
-	private String file; //$NON-NLS-1$
-	/**
-	 * directory where plugins files are stored
-	 */
-	public static final String DIR = "plugins"; //$NON-NLS-1$
+	/** XML file where the list of installed plugins is stored */
+	private String filePath;
+	/** Directory where plugins files are stored */
+	public static final String DIR = "plugins";
+	/** Name of file where is plugin defined */
+	private static String FILE_NAME = "plugin.xml";
+	/** Instance on Plugin Engine */
 	private static PluginEngine instance;
 
 	private int majorVersion = 0;
@@ -98,20 +99,20 @@ public class PluginEngine {
 	}
 
 	/**
-	 * change the shared instance of this class
+	 * Change the shared instance of this class
 	 */
 	public static void setInstance(PluginEngine engine) {
 		PluginEngine.instance = engine;
 	}
 
 	/**
-	 * this method should be called first before starting plugins
+	 * This method should be called first before starting plugins
 	 * 
 	 * @param filePath
 	 * @throws PlugEngineException
 	 */
 	public void init(String filePath) throws PluginEngineException {
-		this.file = filePath;
+		this.filePath = filePath;
 		this.loadPluggables();
 	}
 
@@ -122,21 +123,48 @@ public class PluginEngine {
 	 */
 	protected void loadPluggables() throws PluginEngineException {
 		try {
-			File xml = new File(file);
+			List<File> listOfFiles = PluginUtils
+					.getAllPluginsFiles(new File(filePath));
+			for (File file : listOfFiles) {
+				if (file.exists()) {
+					if (file.getName().equalsIgnoreCase("weka.jar")) {
+						continue;
+					}
+					// TODO rozbalit JAR a nacist plugin.xml do FILE
+					/*URL url = getClass().getResource(
+							file.getAbsolutePath() + File.separator + FILE_NAME);*/
+//					PluginUtils.printClasspath();
+					URL url = ClassLoader.getSystemResource(File.separator + FILE_NAME);
+					// TODO pokud plugin.XML existuje, pak ho nacti
+					// TODO pokracuj dale
+					InputStream is = ClassLoader.getSystemResourceAsStream(FILE_NAME);
+//					JarFile jarFile = new JarFile(file);
+//					Enumeration<JarEntry> enumeration = jarFile.entries();
+//					while (enumeration.hasMoreElements()) {
+//						JarEntry entry = enumeration.nextElement();
+//						java.util.jar.Attributes attrs = entry.getAttributes();
+//						
+//						System.out.println();
+//					}
+					if (is != null) {
+						DefaultHandler handler = new PlugEngineHandler(true);
+						SAXParserFactory.newInstance().newSAXParser().parse(is, handler);
+					} else {
+						// TODO jinak zapis error do logu o tom ,ze plugin bude preskocen
+						// TODO nebot neobsahuje plugin.xml file, ale muze to byt jen knihovna, kterou dany plugin externe
+						// TODO vyuziva, takze to nastavit jen jako logger.warn()
+					}
+				}
+				/*
+				 * // delete unused plugin folder : File pluginsFolder = new File(DIR);
+				 * for (File folder : pluginsFolder.listFiles(new
+				 * RemovedPluginFolderFilter())) { for (File file : folder.listFiles())
+				 * file.delete(); folder.delete(); }
+				 */
 
-			if (xml.exists()) {
-				DefaultHandler handler = new PlugEngineHandler(true);
-				SAXParserFactory.newInstance().newSAXParser().parse(xml, handler);
 			}
-			/*
-			 * // delete unused plugin folder : File pluginsFolder = new File(DIR);
-			 * for (File folder : pluginsFolder.listFiles(new
-			 * RemovedPluginFolderFilter())) { for (File file : folder.listFiles())
-			 * file.delete(); folder.delete(); }
-			 */
-
 		} catch (Exception e) {
-			throw new PluginEngineException("Unable to load plugins", e); //$NON-NLS-1$
+			throw new PluginEngineException(PluginEngineErrorCodes.UNABLE_PLUGINS_LOAD, e);
 		}
 	}
 
@@ -178,7 +206,7 @@ public class PluginEngine {
 			Document document = DocumentBuilderFactory.newInstance()
 					.newDocumentBuilder().newDocument();
 			document.setXmlStandalone(true);
-			Element root = document.createElement("plugins"); //$NON-NLS-1$
+			Element root = document.createElement("plugins");
 			document.appendChild(root);
 			Set<Entry<String, List<IPluggable>>> pluginsToSave = listOfAllPlugins
 					.entrySet();
@@ -190,25 +218,30 @@ public class PluginEngine {
 				List<IPluggable> pluggByCategory = entry.getValue();
 				// for each plugins from given category
 				for (IPluggable plugin : pluggByCategory) {
-					Element plugElt = document.createElement("plugin"); //$NON-NLS-1$
-					plugElt.setAttribute("hidden", hiddens.get(plugin).toString());//$NON-NLS-1$ 
-					plugElt.setAttribute("update", updateEnable.get(plugin).toString()); //$NON-NLS-1$
+					Element plugElt = document.createElement("plugin");
+					plugElt.setAttribute("hidden", hiddens.get(plugin).toString());
+					plugElt.setAttribute("update", updateEnable.get(plugin).toString());
 					plugElt.setAttribute("enabled", enabled.get(plugin).toString());
-					//$NON-NLS-1$
+
 					categyElt.appendChild(plugElt);
-					Element sourceElt = document.createElement("source"); //$NON-NLS-1$
+					Element sourceElt = document.createElement("source");
 					sourceElt.setTextContent(localSources.get(plugin));
 					plugElt.appendChild(sourceElt);
-					Element classElt = document.createElement("class"); //$NON-NLS-1$
+					Element classElt = document.createElement("class");
 					classElt.setTextContent(plugin.getClass().getName().trim());
 					plugElt.appendChild(classElt);
+					Element appVersionElt = document.createElement("appVersion");
+					plugElt.appendChild(appVersionElt);
 				}
 			}
-			TransformerFactory.newInstance().newTransformer().transform(
-					new DOMSource(document), new StreamResult(new File(file)));
+			TransformerFactory
+					.newInstance()
+					.newTransformer()
+					.transform(new DOMSource(document),
+							new StreamResult(new File(filePath)));
 
 		} catch (Exception e) {
-			throw new PluginEngineException("JG016", e); //$NON-NLS-1$ 
+			throw new PluginEngineException(PluginEngineErrorCodes.UNABLE_SAVE_PLUGINS_LIST, e);
 		}
 	}
 
@@ -224,18 +257,18 @@ public class PluginEngine {
 			throws PluginEngineException {
 		try {
 			PlugEngineHandler handler = new PlugEngineHandler(false);
-			SAXParserFactory.newInstance().newSAXParser().parse(
-					updateFile.toString(), handler);
+			SAXParserFactory.newInstance().newSAXParser()
+					.parse(updateFile.toString(), handler);
 
 			return handler.getPluggable();
 
 		} catch (Exception e) {
-			throw new PluginEngineException("JG017", e); //$NON-NLS-1$
+			throw new PluginEngineException(PluginEngineErrorCodes.UNABLE_INSTALL_PLUGIN, e);
 		}
 	}
 
 	/**
-	 * add or update a plugin
+	 * Add or update a plugin
 	 * 
 	 * @param plugin
 	 * @throws PlugEngineException
@@ -372,7 +405,7 @@ public class PluginEngine {
 	}
 
 	/**
-	 * enable or disable the auto update of a plugin
+	 * Enable or disable the auto update of a plugin
 	 * 
 	 * @throws PlugEngineException
 	 */
@@ -392,7 +425,7 @@ public class PluginEngine {
 	}
 
 	/**
-	 * enable or disable the auto update of a plugin
+	 * Enable or disable the auto update of a plugin
 	 * 
 	 * @throws PlugEngineException
 	 */
@@ -422,8 +455,8 @@ public class PluginEngine {
 		for (IPluggable update : this.getAllUpdatablePluggables()) {
 			try {
 				PlugEngineHandler handler = new PlugEngineHandler(update);
-				SAXParserFactory.newInstance().newSAXParser().parse(
-						update.getURI().toString(), handler);
+				SAXParserFactory.newInstance().newSAXParser()
+						.parse(update.getURI().toString(), handler);
 				if (handler.isUpdate())
 					result.add(update);
 
@@ -434,8 +467,11 @@ public class PluginEngine {
 	}
 
 	/**
-	 * @return true if the given plugin does not work for this version of the main
-	 *         application
+	 * Return true if the given plug-in does not work for this version of the main
+	 * application
+	 * 
+	 * @return true if the given plug-in does not work for this version of the
+	 *         main application
 	 * @see IPluggable#getMinimalAppVersion()
 	 * @see PlugEngine#getCurrentVersion()
 	 */
@@ -445,7 +481,7 @@ public class PluginEngine {
 				+ String.valueOf(minorVersion) + String.valueOf(revisionVersion);
 		String minimalVersion = String.valueOf(minimal[0])
 				+ String.valueOf(minimal[1]) + String.valueOf(minimal[2]);
-		
+
 		if (Integer.valueOf(appVersion) >= Integer.valueOf(minimalVersion)) {
 			return true;
 		}
@@ -463,7 +499,7 @@ public class PluginEngine {
 	}
 
 	/**
-	 * change the current version of the main application. Plugin with
+	 * Change the current version of the main application. Plug-in with
 	 * <code>getMinimalVersion()</code> < to <code>getCurrentVersion()</code> will
 	 * be disabled.
 	 * 
@@ -489,7 +525,7 @@ public class PluginEngine {
 	}
 
 	/**
-	 * add a file to classpath at runtime
+	 * Add a file to classpath at runtime
 	 * 
 	 * @param fileUrl
 	 *          the path of the file to add
@@ -513,23 +549,37 @@ public class PluginEngine {
 	 *         =0
 	 */
 	protected static void addFileToClasspath(File file) throws Exception {
-		Method method = URLClassLoader.class.getDeclaredMethod(
-				"addURL", new Class[] { URL.class }); //$NON-NLS-1$
+		Method method = URLClassLoader.class.getDeclaredMethod("addURL",
+				new Class[] { URL.class });
 		method.setAccessible(true);
 		method.invoke(ClassLoader.getSystemClassLoader(), new Object[] { file
 				.toURI().toURL() });
 	}
 
 	/**
-	 * parse XML configuration files
+	 * Parse XML configuration files
+	 * 
+	 * @author vsouhrada (v.souhrada at gmail.com)
+	 * @see DefaultHandler
 	 */
 	protected class PlugEngineHandler extends DefaultHandler {
 
-		private boolean inVersion = false, inClass = false, inSource = false,
-				inPlugin = false, inCategory = false;
-		private boolean local, update = false, hidden = false,
-				updateEnabled = true, enable = true;
-		private String folder, source, newVersion, category = null;
+		private boolean inVersion;
+		private boolean inClass;
+		private boolean inSource;
+		private boolean inPlugin;
+		private boolean inCategory;
+		private boolean inAppVersion;
+		private boolean local;
+		private boolean update;
+		private boolean hidden;
+		private boolean updateEnabled = true;
+		private boolean enable = true;
+		private String folder;
+		private String source;
+		private String newVersion;
+		private String category;
+		private String appVersion;
 		private IPluggable pluggable;
 
 		/**
@@ -553,20 +603,21 @@ public class PluginEngine {
 		@Override
 		public void startElement(String uri, String localName, String qName,
 				Attributes attributes) throws SAXException {
-			inCategory = qName.equalsIgnoreCase("category"); //$NON-NLS-1$
-			inPlugin = qName.equalsIgnoreCase("plugin") || inPlugin; //$NON-NLS-1$
-			inVersion = inPlugin && qName.equalsIgnoreCase("version"); //$NON-NLS-1$
-			inClass = inPlugin && qName.equalsIgnoreCase("class"); //$NON-NLS-1$
-			inSource = inPlugin && qName.equalsIgnoreCase("source"); //$NON-NLS-1$
+			inCategory = qName.equalsIgnoreCase("category");
+			inPlugin = qName.equalsIgnoreCase("plugin") || inPlugin;
+			inVersion = inPlugin && qName.equalsIgnoreCase("version");
+			inClass = inPlugin && qName.equalsIgnoreCase("class");
+			inSource = inPlugin && qName.equalsIgnoreCase("source");
+			inAppVersion = inPlugin && qName.equalsIgnoreCase("appVersion");
 
-			if (qName.equalsIgnoreCase("plugin")) { //$NON-NLS-1$
-				hidden = Boolean.parseBoolean(attributes.getValue("hidden")); //$NON-NLS-1$
-				updateEnabled = !"false".equalsIgnoreCase(attributes.getValue("update")); //$NON-NLS-1$ //$NON-NLS-2$
-				enable = !"false".equalsIgnoreCase(attributes.getValue("enabled")); //$NON-NLS-1$ //$NON-NLS-2$
+			if (qName.equalsIgnoreCase("plugin")) {
+				hidden = Boolean.parseBoolean(attributes.getValue("hidden"));
+				updateEnabled = !"false".equalsIgnoreCase(attributes.getValue("update")); //$NON-NLS-2$
+				enable = !"false".equalsIgnoreCase(attributes.getValue("enabled")); //$NON-NLS-2$
 			}
 
-			if (qName.equalsIgnoreCase("category")) { //$NON-NLS-1$
-				category = attributes.getValue("name"); //$NON-NLS-1$
+			if (qName.equalsIgnoreCase("category")) {
+				category = attributes.getValue("name");
 			}
 		}
 
@@ -578,7 +629,6 @@ public class PluginEngine {
 					if (pluggable.getPluginVersion() != null
 							&& !pluggable.getPluginVersion().equalsIgnoreCase(newVersion))
 						update = true;
-
 				} else if (inSource && pluggable == null) {
 					source = new String(ch, start, length);
 					if (local) {
@@ -586,9 +636,7 @@ public class PluginEngine {
 						for (File file : localFolder.listFiles()) {
 							addFileToClasspath(file);
 						}
-
 					}
-
 				} else if (inClass && pluggable == null) {
 					String className = new String(ch, start, length);
 					Class<?> loadedClass = Class.forName(className);
@@ -605,6 +653,9 @@ public class PluginEngine {
 					}
 					addPluggableToCathegoryList(pluggable, category);
 					folder = null;
+				} else if (inAppVersion) {
+					appVersion = new String(ch, start, length);
+					// FIXME DODELAT APP VERSION PRES XML
 				}
 			} catch (Exception e) {
 				throw new SAXException(e);
@@ -623,21 +674,25 @@ public class PluginEngine {
 
 		public void endElement(String uri, String localName, String qName)
 				throws SAXException {
-			if (qName.equalsIgnoreCase("version")) //$NON-NLS-1$
+			if (qName.equalsIgnoreCase("version"))
 				inVersion = false;
-			if (qName.equalsIgnoreCase("class")) //$NON-NLS-1$
+			if (qName.equalsIgnoreCase("class"))
 				inClass = false;
-			if (qName.equalsIgnoreCase("plugin")) { //$NON-NLS-1$
+			if (qName.equalsIgnoreCase("plugin")) {
 				inPlugin = false;
 				if (local)
 					pluggable = null;
 			}
-			if (qName.equalsIgnoreCase("category")) { //$NON-NLS-1$
+			if (qName.equalsIgnoreCase("category")) {
 				inCategory = false;
 				category = null;
 			}
-			if (qName.equalsIgnoreCase("source")) //$NON-NLS-1$
+			if (qName.equalsIgnoreCase("source")) {
 				inSource = false;
+			}
+			if (qName.equalsIgnoreCase("appVersion")) {
+				inAppVersion = false;
+			}
 		}
 
 		/**

@@ -1,31 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="PluginEngine" default="makejar" basedir=".">
-		
-	<!-- domovský adresář -->
+
+	<!-- Home directory -->
 	<property name="projecthome" value="." />
-	
-	<!-- verze -->
-	<property name="version" value="1.0" />
 
-	<!-- symbolický název -->
+	<!-- version -->
+	<property name="version" value="2.0.0-SNAPSHOT" />
+
+	<!-- Symbolic name of jar -->
 	<property name="jarname" value="${ant.project.name}" />
-	
-	<property name="juiglehome" value="../Juigle"/>
-	
-	<property name="wekahome" value="../WekaPerspective"/>
 
-	<!-- autor -->
+	<!-- Deploy location for projects which this project using. It is only local deployment -->
+	<!-- Please remove this if this project not use -->
+	<property name="juiglehome" value="../Juigle" />
+	<property name="wekahome" value="../WekaPerspective" />
+
+	<!-- author -->
 	<property name="author" value="Vaclav Souhrada" />
-		
 	<property name="src" location="${projecthome}/src" />
 	<property name="build" location="${projecthome}/bin" />
 	<property name="jars" location="${projecthome}/jars" />
 	<property name="lib" location="${projecthome}/lib" />
+	<property name="dir.javadoc" location="${projecthome}/docs/javadoc" />
+
+	<!-- Deploy projects locations -->
 	<property name="deployloc" location="${juiglehome}/lib" />
 	<property name="deploylocWekaPersp" location="${wekahome}/lib" />
 
 	<property name="runloc" location="${jars}" />
-	
+
 	<property name="buildfilename" value="${jarname}-${version}.jar" />
 
 	<path id="compile.class.path">
@@ -45,14 +48,14 @@
 			<compilerarg value="-Xlint:none" />
 		</javac>
 	</target>
-	
+
 	<target name="makejar" description="generate the distribution" depends="compile">
 		<mkdir dir="${jars}" />
 		<jar jarfile="${jars}/${buildfilename}" basedir="${build}">
 		</jar>
 		<!--<antcall target="autoclean" />-->
 	</target>
-	
+
 	<!-- automatický úklid po kompilaci a vytvoření-->
 	<target name="autoclean">
 		<delete dir="${build}" />
@@ -65,18 +68,37 @@
 		<delete dir="${deploy}" />
 	</target>
 
-	
+
 	<!-- volitelný target, který umožní vytvořený jar nakopírovat
 		na libovolné místo na disku. Před použitím
 		je nutné změnit cestu deployloc  -->
 	<target name="deploy" depends="makejar">
 		<delete file="${deployloc}/${buildfilename}" />
-		<copy file="${jars}/${buildfilename}" todir="${deployloc}"/>
-		<copy file="${jars}/${buildfilename}" todir="${deploylocWekaPersp}"/>
-	</target>	
-	
+		<copy file="${jars}/${buildfilename}" todir="${deployloc}" />
+		<!-- <copy file="${jars}/${buildfilename}" todir="${deploylocWekaPersp}"/> -->
+
+	</target>
+
 	<target name="run">
-		<echo message="PluginEngine can not be runned alone" />	
-		<echo message="Shutting down PluginEngine" />	
-		</target>
+		<echo message="...PluginEngine can not be runned alone..." />
+		<echo message="...Shutting down PluginEngine..." />
+	</target>
+
+	<!-- Javadoc Generator -->
+	<target name="javadoc">
+		<javadoc excludepackagenames="ch.ethz.origo.juigle.plugin.test" 
+			access="public" 
+			destdir="${dir.javadoc}" 
+			author="true" 
+			version="true" 
+			use="true" 
+			windowtitle="${jarname}-${version}" 
+			doctitle="${jarname}-${version}  - Javadoc">
+			<fileset dir="${src}" defaultexcludes="yes">
+				<include name="**/*.java" />
+				<exclude name="ch/ethz/origo/juigle/plugin/test/**/*.java" />
+			</fileset>
+		</javadoc>
+	</target>
+	
 </project>

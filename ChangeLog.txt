@@ -1,0 +1,11 @@
+*********************************************************************************************
+*                                  CHANGE LOG 1.0.0 - > 2.0.0                               *
+*********************************************************************************************
+  	 	
+ * (10/xx/2010)
+  	 #134
+  	 	ADDED   : PluginEngine has now own errors properties files. (http://juigle.origo.ethz.ch/issues/25)
+  	 	ADDED   : Class PluginUtils - utilities methods and variables for the PluginEngine.
+  	 	ADDED   : Class PluginFileNameFilter - filter for plug-in archive JAR files.
+  	 	CHANGED : Changed PluginEngine class. Now are plug-ins load from the xml file which is archived in the plug-in jar (not complete yet). (http://juigle.origo.ethz.ch/issues/22)
+  	 	ADDED   : Added target for generating Javadoc by ANT build.xml.
