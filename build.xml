@@ -5,7 +5,7 @@
 	<property name="projecthome" value="." />
 	
 	<!-- verze -->
-	<property name="version" value="1.0.1-SNAPSHOT" />
+	<property name="version" value="1.0.1" />
 
 	<!-- symbolický název -->
 	<property name="jarname" value="${ant.project.name}" />
