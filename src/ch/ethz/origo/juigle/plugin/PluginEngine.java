@@ -16,7 +16,7 @@
 
 /*
  *  
- *    Copyright (C) 2009 - 2010 
+ *    Copyright (C) 2009 - 2011
  *    							University of West Bohemia, 
  *                  Department of Computer Science and Engineering, 
  *                  Pilsen, Czech Republic
@@ -57,7 +57,7 @@ import ch.ethz.origo.juigle.plugin.exception.PluginEngineException;
  * instance for this class.
  * 
  * @author Vaclav Souhrada (v.souhrada at gmail.com)
- * @version 0.1.5 (5/20/2010)
+ * @version 0.1.6 (4/5/2011)
  * @since 0.1.0 (3/07/2010)
  * 
  */
@@ -204,8 +204,8 @@ public class PluginEngine {
 					plugElt.appendChild(classElt);
 				}
 			}
-			TransformerFactory.newInstance().newTransformer().transform(
-					new DOMSource(document), new StreamResult(new File(file)));
+			TransformerFactory.newInstance().newTransformer()
+					.transform(new DOMSource(document), new StreamResult(new File(file)));
 
 		} catch (Exception e) {
 			throw new PluginEngineException("JG016", e); //$NON-NLS-1$ 
@@ -224,8 +224,8 @@ public class PluginEngine {
 			throws PluginEngineException {
 		try {
 			PlugEngineHandler handler = new PlugEngineHandler(false);
-			SAXParserFactory.newInstance().newSAXParser().parse(
-					updateFile.toString(), handler);
+			SAXParserFactory.newInstance().newSAXParser()
+					.parse(updateFile.toString(), handler);
 
 			return handler.getPluggable();
 
@@ -313,19 +313,22 @@ public class PluginEngine {
 	 * @param category
 	 *          name of plugins category
 	 * @return all correct plugins from entered category
-	 * @version 0.1.1 (3/29/2010)
+	 * @version 0.2.0 (4/5/2011)
 	 * @since 0.1.2 (3/28/2010)
 	 */
 	public List<IPluggable> getAllCorrectPluggables(String category) {
-		List<IPluggable> pluginsList = listOfAllPlugins.get(category);
 		List<IPluggable> correctList = new ArrayList<IPluggable>();
-		if (pluginsList.size() > 0) {
-			for (IPluggable item : pluginsList) {
-				if (isEnabled(item) && !isHidden(item) && isCompatible(item)) {
-					correctList.add(item);
+		if (listOfAllPlugins != null && !listOfAllPlugins.isEmpty()) {
+			List<IPluggable> pluginsList = listOfAllPlugins.get(category);
+			if (pluginsList != null && !pluginsList.isEmpty()) {
+				for (IPluggable item : pluginsList) {
+					if (isEnabled(item) && !isHidden(item) && isCompatible(item)) {
+						correctList.add(item);
+					}
 				}
 			}
 		}
+		
 		return correctList;
 	}
 
@@ -422,8 +425,8 @@ public class PluginEngine {
 		for (IPluggable update : this.getAllUpdatablePluggables()) {
 			try {
 				PlugEngineHandler handler = new PlugEngineHandler(update);
-				SAXParserFactory.newInstance().newSAXParser().parse(
-						update.getURI().toString(), handler);
+				SAXParserFactory.newInstance().newSAXParser()
+						.parse(update.getURI().toString(), handler);
 				if (handler.isUpdate())
 					result.add(update);
 
@@ -445,7 +448,7 @@ public class PluginEngine {
 				+ String.valueOf(minorVersion) + String.valueOf(revisionVersion);
 		String minimalVersion = String.valueOf(minimal[0])
 				+ String.valueOf(minimal[1]) + String.valueOf(minimal[2]);
-		
+
 		if (Integer.valueOf(appVersion) >= Integer.valueOf(minimalVersion)) {
 			return true;
 		}
