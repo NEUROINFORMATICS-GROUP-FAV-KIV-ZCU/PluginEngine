@@ -1,11 +1,25 @@
 *********************************************************************************************
-*                                  CHANGE LOG 1.0.0 - > 2.0.0                               *
+*                                  CHANGE LOG 1.0.1 - > 2.0.0                               *
 *********************************************************************************************
+
+ * (4/15/2011) vsouhrada
+  	 #169
+  	 
+  	 	ADDED   : Now is in target called makejar (build.xml) create jar file with sources
   	 	
- * (10/xx/2010)
+ * (10/xx/2010) vsouhrada
   	 #134
+  	 
   	 	ADDED   : PluginEngine has now own errors properties files. (http://juigle.origo.ethz.ch/issues/25)
   	 	ADDED   : Class PluginUtils - utilities methods and variables for the PluginEngine.
   	 	ADDED   : Class PluginFileNameFilter - filter for plug-in archive JAR files.
   	 	CHANGED : Changed PluginEngine class. Now are plug-ins load from the xml file which is archived in the plug-in jar (not complete yet). (http://juigle.origo.ethz.ch/issues/22)
   	 	ADDED   : Added target for generating Javadoc by ANT build.xml.
+
+*********************************************************************************************
+*                                  CHANGE LOG 1.0.0 - > 1.0.1                               *
+*********************************************************************************************
+
+ * (4/7/2011) vsouhrada
+  	 #154
+  	 	FIXED   : Fixed a PluginEngine class. Now if not exist category which user search - no NullPointer is throw.

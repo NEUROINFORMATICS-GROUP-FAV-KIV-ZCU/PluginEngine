@@ -30,6 +30,7 @@
 	<property name="runloc" location="${jars}" />
 
 	<property name="buildfilename" value="${jarname}-${version}.jar" />
+	<property name="build.filename.src" value="${jarname}-${version}-src.jar" />
 
 	<path id="compile.class.path">
 		<fileset dir=".">
@@ -53,6 +54,8 @@
 		<mkdir dir="${jars}" />
 		<jar jarfile="${jars}/${buildfilename}" basedir="${build}">
 		</jar>
+		<jar jarfile="${jars}/${build.filename.src}" basedir="${src}" includes="**/*.java">
+	    </jar>
 		<!--<antcall target="autoclean" />-->
 	</target>
 
@@ -75,8 +78,8 @@
 	<target name="deploy" depends="makejar">
 		<delete file="${deployloc}/${buildfilename}" />
 		<copy file="${jars}/${buildfilename}" todir="${deployloc}" />
+		<copy file="${jars}/${build.filename.src}" todir="${deployloc}"/>
 		<!-- <copy file="${jars}/${buildfilename}" todir="${deploylocWekaPersp}"/> -->
-
 	</target>
 
 	<target name="run">
