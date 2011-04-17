@@ -16,7 +16,7 @@
 
 /*
  *  
- *    Copyright (C) 2009 - 2010 
+ *    Copyright (C) 2009 - 2011 
  *    							University of West Bohemia, 
  *                  Department of Computer Science and Engineering, 
  *                  Pilsen, Czech Republic
@@ -28,16 +28,20 @@ import java.io.FileFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
+import java.net.JarURLConnection;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.SAXParserFactory;
@@ -59,7 +63,7 @@ import ch.ethz.origo.juigle.plugin.exception.PluginEngineException;
  * instance for this class.
  * 
  * @author vsouhrada (v.souhrada at gmail.com)
- * @version 0.2.0.00 (10/26/2010)
+ * @version 1.0.0 (4/7/2011)
  * @since 0.1.0 (3/07/2010)
  * 
  */
@@ -106,7 +110,7 @@ public class PluginEngine {
 	}
 
 	/**
-	 * This method should be called first before starting plugins
+	 * This method should be called first before starting plug-ins
 	 * 
 	 * @param filePath
 	 * @throws PlugEngineException
@@ -127,45 +131,65 @@ public class PluginEngine {
 					.getAllPluginsFiles(new File(filePath));
 			for (File file : listOfFiles) {
 				if (file.exists()) {
-					if (file.getName().equalsIgnoreCase("weka.jar")) {
-						continue;
-					}
-					// TODO rozbalit JAR a nacist plugin.xml do FILE
-					/*URL url = getClass().getResource(
-							file.getAbsolutePath() + File.separator + FILE_NAME);*/
-//					PluginUtils.printClasspath();
-					URL url = ClassLoader.getSystemResource(File.separator + FILE_NAME);
-					// TODO pokud plugin.XML existuje, pak ho nacti
-					// TODO pokracuj dale
-					InputStream is = ClassLoader.getSystemResourceAsStream(FILE_NAME);
-//					JarFile jarFile = new JarFile(file);
-//					Enumeration<JarEntry> enumeration = jarFile.entries();
-//					while (enumeration.hasMoreElements()) {
-//						JarEntry entry = enumeration.nextElement();
-//						java.util.jar.Attributes attrs = entry.getAttributes();
-//						
-//						System.out.println();
-//					}
+					InputStream is = includeJar(file);
 					if (is != null) {
 						DefaultHandler handler = new PlugEngineHandler(true);
 						SAXParserFactory.newInstance().newSAXParser().parse(is, handler);
-					} else {
+						// } else {
 						// TODO jinak zapis error do logu o tom ,ze plugin bude preskocen
-						// TODO nebot neobsahuje plugin.xml file, ale muze to byt jen knihovna, kterou dany plugin externe
+						// TODO nebot neobsahuje plugin.xml file, ale muze to byt jen
+						// knihovna, kterou dany plugin externe
 						// TODO vyuziva, takze to nastavit jen jako logger.warn()
+						// }
 					}
+					/*
+					 * // delete unused plugin folder : File pluginsFolder = new
+					 * File(DIR); for (File folder : pluginsFolder.listFiles(new
+					 * RemovedPluginFolderFilter())) { for (File file :
+					 * folder.listFiles()) file.delete(); folder.delete(); }
+					 */
 				}
-				/*
-				 * // delete unused plugin folder : File pluginsFolder = new File(DIR);
-				 * for (File folder : pluginsFolder.listFiles(new
-				 * RemovedPluginFolderFilter())) { for (File file : folder.listFiles())
-				 * file.delete(); folder.delete(); }
-				 */
-
 			}
 		} catch (Exception e) {
-			throw new PluginEngineException(PluginEngineErrorCodes.UNABLE_PLUGINS_LOAD, e);
+			throw new PluginEngineException(
+					PluginEngineErrorCodes.UNABLE_PLUGINS_LOAD, e);
 		}
+	}
+
+	private InputStream includeJar(File file) throws Exception {
+		if (file.isDirectory())
+			return null;
+
+		URL jarURL = null;
+		JarFile jar = null;
+		try {
+			jarURL = new URL("file://" + file.getCanonicalPath());
+			jarURL = new URL("jar:" + jarURL.toExternalForm() + "!/");
+			JarURLConnection conn = (JarURLConnection) jarURL.openConnection();
+			jar = conn.getJarFile();
+		} catch (Exception e) {
+			// not a JAR or disk I/O error
+			// either way, just skip
+			return null;
+		}
+
+		if (jar == null || jarURL == null)
+			return null;
+
+		Enumeration<JarEntry> e = jar.entries();
+		while (e.hasMoreElements()) {
+			JarEntry entry = e.nextElement();
+
+			if (!entry.isDirectory()) {
+				if (entry.getName().toUpperCase()
+						.equalsIgnoreCase(PluginUtils.XML_PLUGIN_FILE_NAME)) {
+					addFileToClasspath(file);
+					return jar.getInputStream(entry);
+				}
+				continue;
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -241,7 +265,8 @@ public class PluginEngine {
 							new StreamResult(new File(filePath)));
 
 		} catch (Exception e) {
-			throw new PluginEngineException(PluginEngineErrorCodes.UNABLE_SAVE_PLUGINS_LIST, e);
+			throw new PluginEngineException(
+					PluginEngineErrorCodes.UNABLE_SAVE_PLUGINS_LIST, e);
 		}
 	}
 
@@ -263,7 +288,8 @@ public class PluginEngine {
 			return handler.getPluggable();
 
 		} catch (Exception e) {
-			throw new PluginEngineException(PluginEngineErrorCodes.UNABLE_INSTALL_PLUGIN, e);
+			throw new PluginEngineException(
+					PluginEngineErrorCodes.UNABLE_INSTALL_PLUGIN, e);
 		}
 	}
 
@@ -346,19 +372,22 @@ public class PluginEngine {
 	 * @param category
 	 *          name of plugins category
 	 * @return all correct plugins from entered category
-	 * @version 0.1.1 (3/29/2010)
+	 * @version 0.2.0 (4/5/2011)
 	 * @since 0.1.2 (3/28/2010)
 	 */
 	public List<IPluggable> getAllCorrectPluggables(String category) {
-		List<IPluggable> pluginsList = listOfAllPlugins.get(category);
 		List<IPluggable> correctList = new ArrayList<IPluggable>();
-		if (pluginsList.size() > 0) {
-			for (IPluggable item : pluginsList) {
-				if (isEnabled(item) && !isHidden(item) && isCompatible(item)) {
-					correctList.add(item);
+		if (listOfAllPlugins != null && !listOfAllPlugins.isEmpty()) {
+			List<IPluggable> pluginsList = listOfAllPlugins.get(category);
+			if (pluginsList != null && !pluginsList.isEmpty()) {
+				for (IPluggable item : pluginsList) {
+					if (isEnabled(item) && !isHidden(item) && isCompatible(item)) {
+						correctList.add(item);
+					}
 				}
 			}
 		}
+
 		return correctList;
 	}
 
