@@ -10,11 +10,6 @@
 	<!-- Symbolic name of jar -->
 	<property name="jarname" value="${ant.project.name}" />
 
-	<!-- Deploy location for projects which this project using. It is only local deployment -->
-	<!-- Please remove this if this project not use -->
-	<property name="juiglehome" value="../Juigle" />
-	<property name="wekahome" value="../WekaPerspective" />
-
 	<!-- author -->
 	<property name="author" value="Vaclav Souhrada" />
 	<property name="src" location="${projecthome}/src" />
@@ -22,10 +17,6 @@
 	<property name="jars" location="${projecthome}/jars" />
 	<property name="lib" location="${projecthome}/lib" />
 	<property name="dir.javadoc" location="${projecthome}/docs/javadoc" />
-
-	<!-- Deploy projects locations -->
-	<property name="deployloc" location="${juiglehome}/lib" />
-	<property name="deploylocWekaPersp" location="${wekahome}/lib" />
 
 	<property name="runloc" location="${jars}" />
 
@@ -41,7 +32,6 @@
 	<target name="init">
 		<mkdir dir="${build}" />
 		<mkdir dir="${jars}" />
-		<mkdir dir="${deployloc}" />
 	</target>
 
 	<target name="compile" depends="init">
@@ -68,18 +58,6 @@
 	<target name="clean">
 		<antcall target="autoclean" />
 		<delete dir="${jars}" />
-		<delete dir="${deploy}" />
-	</target>
-
-
-	<!-- volitelný target, který umožní vytvořený jar nakopírovat
-		na libovolné místo na disku. Před použitím
-		je nutné změnit cestu deployloc  -->
-	<target name="deploy" depends="makejar">
-		<delete file="${deployloc}/${buildfilename}" />
-		<copy file="${jars}/${buildfilename}" todir="${deployloc}" />
-		<copy file="${jars}/${build.filename.src}" todir="${deployloc}"/>
-		<!-- <copy file="${jars}/${buildfilename}" todir="${deploylocWekaPersp}"/> -->
 	</target>
 
 	<target name="run">

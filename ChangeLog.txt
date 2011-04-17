@@ -3,6 +3,11 @@
 *********************************************************************************************
 
  * (4/15/2011) vsouhrada
+  	 #170
+  	 
+  	 	CHANGED : Changed PluginEngine class. Now are plug-ins load from the xml file which is archived in the plug-in jar (complete). See (http://juigle.origo.ethz.ch/issues/22)
+  	 	
+ * (4/15/2011) vsouhrada
   	 #169
   	 
   	 	ADDED   : Now is in target called makejar (build.xml) create jar file with sources
