@@ -29,7 +29,7 @@ import java.io.File;
  * Abstract class for plugins.
  * 
  * @author Vaclav Souhrada (v.souhrada at gmail.com)
- * @version 1.0.0 (5/01/2011)
+ * @version 1.1.0 (5/01/2011)
  * @since 0.1.0 (3/07/2010)
  * @see IPluggable
  * 
@@ -37,6 +37,7 @@ import java.io.File;
 public abstract class AbstractPlugin implements IPluggable {
 
 	private String version;
+	private String category;
 	private int[] minimalPluginVersion;
 
 	/**
@@ -71,6 +72,16 @@ public abstract class AbstractPlugin implements IPluggable {
 	@Override
 	public String getPluginVersion() {
 		return version;
+	}
+	
+	@Override
+	public void setCategory(String category) {
+		this.category = category;
+	}
+	
+	@Override
+	public String getCategory() {
+		return category;
 	}
 
 }
