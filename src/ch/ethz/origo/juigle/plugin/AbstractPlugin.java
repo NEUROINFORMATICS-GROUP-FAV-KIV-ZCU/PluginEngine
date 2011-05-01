@@ -16,7 +16,7 @@
 
 /*
  *  
- *    Copyright (C) 2009 - 2010 
+ *    Copyright (C) 2009 - 2011 
  *    							University of West Bohemia, 
  *                  Department of Computer Science and Engineering, 
  *                  Pilsen, Czech Republic
@@ -29,12 +29,15 @@ import java.io.File;
  * Abstract class for plugins.
  * 
  * @author Vaclav Souhrada (v.souhrada at gmail.com)
- * @version 0.1.0 (3/07/2010)
+ * @version 1.0.0 (5/01/2011)
  * @since 0.1.0 (3/07/2010)
  * @see IPluggable
  * 
  */
 public abstract class AbstractPlugin implements IPluggable {
+
+	private String version;
+	private int[] minimalPluginVersion;
 
 	/**
 	 * Return the directory in which the files of this plugin are stored
@@ -43,6 +46,31 @@ public abstract class AbstractPlugin implements IPluggable {
 	 */
 	protected File getDirectory() {
 		return PluginEngine.getInstance().getDirectory(this);
+	}
+
+	@Override
+	public void setMinimalAppVersion(int[] version) {
+		minimalPluginVersion = version;
+	}
+
+	@Override
+	public int[] getMinimalAppVersion() {
+		return minimalPluginVersion;
+	}
+
+	@Override
+	public String getMinimalAppVersionAsString() {
+		return PluginUtils.getVersionOfPluginAsString(minimalPluginVersion);
+	}
+
+	@Override
+	public void setPluginVersion(String version) {
+		this.version = version;
+	}
+
+	@Override
+	public String getPluginVersion() {
+		return version;
 	}
 
 }

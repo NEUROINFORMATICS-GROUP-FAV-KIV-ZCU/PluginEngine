@@ -1,6 +1,17 @@
 *********************************************************************************************
+* Legend :                                                                                  *
+* ADDED   - indicates new functionality or new part of distribution                         *
+* CHANGED - indicates a change in using/behavior PluginEngine                               *
+* FIXED   - indicates a bug fix                                                             *
+*********************************************************************************************
 *                                  CHANGE LOG 1.0.1 - > 2.0.0                               *
 *********************************************************************************************
+ * (5/01/2011) vsouhrada
+     #179
+     
+        FIXED : Issue #23 - PluginEngine - appVersion not set up - see (http://juigle.origo.ethz.ch/issues/23).
+        ADDED : Added a new methods -  String getVersionOfPluginAsString(int[] version) and int[] getVersionOfPluginAsArray into class PluginUtils.
+        ADDED : Changed interface IPluggable. Added methods setPluginVersion, setMinimalAppVersion and getMinimalAppVersionAsString.
 
  * (4/15/2011) vsouhrada
   	 #170

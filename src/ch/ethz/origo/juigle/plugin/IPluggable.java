@@ -16,7 +16,7 @@
 
 /*
  *  
- *    Copyright (C) 2009 - 2010 
+ *    Copyright (C) 2009 - 2011 
  *    							University of West Bohemia, 
  *                  Department of Computer Science and Engineering, 
  *                  Pilsen, Czech Republic
@@ -31,51 +31,72 @@ import java.net.URI;
  * for plug-in setting and important methods for plugin loader.
  * 
  * @author Vaclav Souhrada (v.souhrada at gmail.com)
- * @version 0.1.1 (4/30/2010)
+ * @version 1.0.0 (5/01/2011)
  * @since (3/07/2010)
  * 
  */
 public interface IPluggable {
 
 	/**
-	 * @return the name for this plugin, should not be null
+	 * @return the name for this plug in, should not be null
 	 */
 	public String getPluginName();
 
 	/**
-	 * @return the version for this plugin
+	 * @return the version for this plug in
 	 */
 	public String getPluginVersion();
 
 	/**
-	 * @return the minimal version of the main application for which this plugin
+	 * By this method you can set a version of the plug in
+	 * @param version version of the plug-in
+	 */
+	public void setPluginVersion(String version);
+
+	/**
+	 * @return the minimal version of the main application for which this plug-in
 	 *         can work
 	 */
 	public int[] getMinimalAppVersion();
+	
+	/**
+	 * @return the minimal version of the main application for which this plug-in
+	 *         can work
+	 */
+	public String getMinimalAppVersionAsString();
 
 	/**
-	 * @return the basic description for this plugin
+	 * By this method you can set a minimal version of application for which is
+	 * plug-in compatible.
+	 * 
+	 * @param version minimal version of application for which is
+	 * plug-in compatible
+	 */
+	public void setMinimalAppVersion(int[] version);
+
+	/**
+	 * @return the basic description for this plug-in
 	 */
 	public String getPluginBasicDescription();
 
 	/**
-	 * @return the description for this plugin
+	 * @return the description for this plug-in
 	 */
 	public String getPluginDescription();
 
 	/**
-	 * @return the icon for this plugin
+	 * @return the icon for this plug-in
 	 */
 	public BufferedImage getIcon();
 
 	/**
-	 * @return the place where the XML descriptor for this plugin can be found,
+	 * @return the place where the XML descriptor for this plug-in can be found,
 	 *         should not be null
 	 */
 	public URI getURI();
 
 	/**
-	 * this method will be called when the main program start if this plugin is
+	 * this method will be called when the main program start if this plug-in is
 	 * installed
 	 * 
 	 * @param args
@@ -84,8 +105,8 @@ public interface IPluggable {
 	public void init(Object... args);
 
 	/**
-	 * this method will be called when this plugin is deleted, so you can free
-	 * ressources, or restore some settings etc ... (the files insides the plugin
+	 * this method will be called when this plug-in is deleted, so you can free
+	 * resources, or restore some settings etc ... (the files insides the plug-in
 	 * directory are automatically deleted, so you don't have to take care of
 	 * this)
 	 */
@@ -98,7 +119,7 @@ public interface IPluggable {
 
 	/**
 	 * if hasOptions() return true, this method will be called when the user want
-	 * to edit the options from this plugin.
+	 * to edit the options from this plug-in.
 	 */
 	public void openOptions();
 

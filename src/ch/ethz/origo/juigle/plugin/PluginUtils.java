@@ -13,7 +13,7 @@ import ch.ethz.origo.juigle.plugin.exception.PluginEngineException;
  * 
  * 
  * @author vsouhrada (v.souhrada at gmail.com)
- * @version 0.1.0.00 (10/20/2010)
+ * @version 1.0.0 (5/01/2011)
  * @since 2.0.0 (10/20/2010)
  * 
  */
@@ -23,6 +23,8 @@ public class PluginUtils {
 	public static final String JAR_EXTENSION = ".jar";
 	/** Plug-in descriptor file */
 	public static final String XML_PLUGIN_FILE_NAME = "plugin.xml";
+	
+	public static final String DEFAULT_VERSION_SEPARATOR = "\\.";
 
 	/**
 	 * Return all Plug-ins JAR archives from the root directory (parameter files).
@@ -55,6 +57,50 @@ public class PluginUtils {
 					+ files.getAbsolutePath());
 		}
 		return listOfFiles;
+	}
+	
+	public static String getVersionOfPluginAsString(int[] version) {
+		String result = null;
+		StringBuilder sb = null;
+		if (version != null) {
+			sb = new StringBuilder();
+			for (int i = 0; i < version.length; i++) {
+				if (i > 0) {
+					sb.append(".");
+				}
+        sb.append(version[i]);
+			}
+		}
+
+		return result;
+	}
+	
+	public static int[] getVersionOfPluginAsArray(String version, String separator) {
+		if (version != null) {
+			if (separator == null) {
+				separator = DEFAULT_VERSION_SEPARATOR;
+			}
+			String[] versionStr = version.split(separator);
+			int[] result = new int[versionStr.length];
+			for (int i = 0; i < versionStr.length; i++) {
+				try {
+					result[i] = Integer.valueOf(versionStr[i]);
+				} catch (NumberFormatException e) {
+					// can not convert a letter to integer
+					// so will be continued and filled a zero
+					result[i] = 0;
+					continue;
+				}
+			}
+			
+			return result;
+		}
+		
+		return null;
+	}
+	
+	public static int[] getVersionOfPluginAsArray(String version) {
+		return getVersionOfPluginAsArray(version, DEFAULT_VERSION_SEPARATOR);
 	}
 
 	public static void printClasspath() {

@@ -63,19 +63,22 @@ import ch.ethz.origo.juigle.plugin.exception.PluginEngineException;
  * instance for this class.
  * 
  * @author vsouhrada (v.souhrada at gmail.com)
- * @version 1.0.0 (4/7/2011)
+ * @version 1.0.1 (5/01/2011)
  * @since 0.1.0 (3/07/2010)
  * 
  */
 public class PluginEngine {
 
-	/** XML file where the list of installed plugins is stored */
+	/** XML file where the list of installed plug-ins is stored */
 	private String filePath;
-	/** Directory where plugins files are stored */
+	/** Directory where plug-ins files are stored */
 	public static final String DIR = "plugins";
-	/** Name of file where is plugin defined */
+	/** Name of file where is plug-in defined */
 	private static String FILE_NAME = "plugin.xml";
-	/** Instance on Plugin Engine */
+	
+	private static final String ELEMENT_CATEGORY = "category";
+	
+	/** Instance on Plug-in Engine */
 	private static PluginEngine instance;
 
 	private int majorVersion = 0;
@@ -236,7 +239,7 @@ public class PluginEngine {
 					.entrySet();
 			// for - each all categories
 			for (Entry<String, List<IPluggable>> entry : pluginsToSave) {
-				Element categyElt = document.createElement("category");
+				Element categyElt = document.createElement(ELEMENT_CATEGORY);
 				categyElt.setAttribute("name", entry.getKey());
 				root.appendChild(categyElt);
 				List<IPluggable> pluggByCategory = entry.getValue();
@@ -613,8 +616,8 @@ public class PluginEngine {
 
 		/**
 		 * @param local
-		 *          indicate if we parse the local list of plugins, or a distant
-		 *          configuartion file of a plugin
+		 *          indicate if we parse the local list of plug-ins, or a distant
+		 *          configuration file of a plug-in
 		 */
 		public PlugEngineHandler(boolean local) {
 			this.local = local;
@@ -622,7 +625,7 @@ public class PluginEngine {
 
 		/**
 		 * @param pluggable
-		 *          the plugin which configuration file will be parsed
+		 *          the plug-in which configuration file will be parsed
 		 */
 		public PlugEngineHandler(IPluggable pluggable) {
 			this.local = false;
@@ -632,7 +635,7 @@ public class PluginEngine {
 		@Override
 		public void startElement(String uri, String localName, String qName,
 				Attributes attributes) throws SAXException {
-			inCategory = qName.equalsIgnoreCase("category");
+			inCategory = qName.equalsIgnoreCase(ELEMENT_CATEGORY);
 			inPlugin = qName.equalsIgnoreCase("plugin") || inPlugin;
 			inVersion = inPlugin && qName.equalsIgnoreCase("version");
 			inClass = inPlugin && qName.equalsIgnoreCase("class");
@@ -641,11 +644,11 @@ public class PluginEngine {
 
 			if (qName.equalsIgnoreCase("plugin")) {
 				hidden = Boolean.parseBoolean(attributes.getValue("hidden"));
-				updateEnabled = !"false".equalsIgnoreCase(attributes.getValue("update")); //$NON-NLS-2$
-				enable = !"false".equalsIgnoreCase(attributes.getValue("enabled")); //$NON-NLS-2$
+				updateEnabled = !"false".equalsIgnoreCase(attributes.getValue("update"));
+				enable = !"false".equalsIgnoreCase(attributes.getValue("enabled"));
 			}
 
-			if (qName.equalsIgnoreCase("category")) {
+			if (qName.equalsIgnoreCase(ELEMENT_CATEGORY)) {
 				category = attributes.getValue("name");
 			}
 		}
@@ -653,11 +656,16 @@ public class PluginEngine {
 		public void characters(char[] ch, int start, int length)
 				throws SAXException {
 			try {
-				if (inVersion && pluggable != null) {
+				if (inVersion) {
 					newVersion = new String(ch, start, length);
-					if (pluggable.getPluginVersion() != null
-							&& !pluggable.getPluginVersion().equalsIgnoreCase(newVersion))
-						update = true;
+					/*
+					 * if (pluggable.getPluginVersion() != null &&
+					 * !pluggable.getPluginVersion().equalsIgnoreCase(newVersion)) update
+					 * = true;
+					 */
+					if (pluggable != null) {
+						pluggable.setPluginVersion(newVersion);
+					}
 				} else if (inSource && pluggable == null) {
 					source = new String(ch, start, length);
 					if (local) {
@@ -670,6 +678,13 @@ public class PluginEngine {
 					String className = new String(ch, start, length);
 					Class<?> loadedClass = Class.forName(className);
 					pluggable = (IPluggable) loadedClass.newInstance();
+					// set up a versions for plug-in
+					if (newVersion != null) {
+						pluggable.setPluginVersion(newVersion);
+					}
+					if (appVersion != null) {
+						setMinimalAppVersion(appVersion);
+					}
 					if (local) {
 						plugins.add(pluggable);
 						hiddens.put(pluggable, hidden);
@@ -680,11 +695,16 @@ public class PluginEngine {
 						addPluggable(pluggable);
 						localSources.put(pluggable, DIR + File.separator + folder);
 					}
+					// add a plug-in into specific category
 					addPluggableToCathegoryList(pluggable, category);
 					folder = null;
 				} else if (inAppVersion) {
+					// get a minimal version for applicaton
 					appVersion = new String(ch, start, length);
-					// FIXME DODELAT APP VERSION PRES XML
+					// set a minimal version of app. for which is a plug-in compatible
+					if (pluggable != null) {
+						setMinimalAppVersion(appVersion);
+					}
 				}
 			} catch (Exception e) {
 				throw new SAXException(e);
@@ -701,6 +721,11 @@ public class PluginEngine {
 			listOfAllPlugins.put(category, pluggables);
 		}
 
+		private void setMinimalAppVersion(String appVersion) {
+			pluggable.setMinimalAppVersion(PluginUtils
+					.getVersionOfPluginAsArray(appVersion));
+		}
+
 		public void endElement(String uri, String localName, String qName)
 				throws SAXException {
 			if (qName.equalsIgnoreCase("version"))
@@ -712,7 +737,7 @@ public class PluginEngine {
 				if (local)
 					pluggable = null;
 			}
-			if (qName.equalsIgnoreCase("category")) {
+			if (qName.equalsIgnoreCase(ELEMENT_CATEGORY)) {
 				inCategory = false;
 				category = null;
 			}
