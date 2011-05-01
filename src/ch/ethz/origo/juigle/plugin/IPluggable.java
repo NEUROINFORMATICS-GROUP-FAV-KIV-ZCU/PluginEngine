@@ -31,7 +31,7 @@ import java.net.URI;
  * for plug-in setting and important methods for plugin loader.
  * 
  * @author Vaclav Souhrada (v.souhrada at gmail.com)
- * @version 1.0.0 (5/01/2011)
+ * @version 2.0.0 (5/01/2011)
  * @since (3/07/2010)
  * 
  */
@@ -136,5 +136,11 @@ public interface IPluggable {
 	 * @return name of algorithm category
 	 */
 	public String getCategory();
+	
+	/**
+	 * Set a category for plug-in
+	 * @param category name for plug-in
+	 */
+	public void setCategory(String category);
 
 }

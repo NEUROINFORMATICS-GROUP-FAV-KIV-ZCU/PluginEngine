@@ -7,6 +7,9 @@
 *                                  CHANGE LOG 1.0.1 - > 2.0.0                               *
 *********************************************************************************************
  * (5/01/2011) vsouhrada
+     #181
+        CHANGED : Added a new method into interface IPluggable - setCategory(String category);
+ 
      #179
      
         FIXED : Issue #23 - PluginEngine - appVersion not set up - see (http://juigle.origo.ethz.ch/issues/23).

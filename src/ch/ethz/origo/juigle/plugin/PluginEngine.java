@@ -63,7 +63,7 @@ import ch.ethz.origo.juigle.plugin.exception.PluginEngineException;
  * instance for this class.
  * 
  * @author vsouhrada (v.souhrada at gmail.com)
- * @version 1.0.1 (5/01/2011)
+ * @version 1.0.2 (5/01/2011)
  * @since 0.1.0 (3/07/2010)
  * 
  */
@@ -695,6 +695,7 @@ public class PluginEngine {
 						addPluggable(pluggable);
 						localSources.put(pluggable, DIR + File.separator + folder);
 					}
+					pluggable.setCategory(category);
 					// add a plug-in into specific category
 					addPluggableToCathegoryList(pluggable, category);
 					folder = null;
